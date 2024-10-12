@@ -1,0 +1,2197 @@
+--==============[FHYUN STORE]===========
+autoSpray = true -- true or false (Usage; Automatically use Ultra World Spray after Planting)
+autoPlant = true -- true or false (Usage; Automatically Plants)
+autoHarvest = true -- true or false (Usage; Automatically Harvests)
+autoGhost = false -- true or false (Usage; Automatically Ghost)
+--==============[DON'T TOUCH OR EDIT FROM HERE]===========
+amtseed = 19800 	-- Maximum Tree (Usage; Ultra World Spray)
+delayRecon = 100	-- Delay reconnect
+worldName = "" -- Don't Touch --
+nowEnable = true -- Don't Touch --
+isEnable = false -- Don't Touch --
+ghostState = false -- Don't Touch --
+wreckWrench = true -- Don't Touch --
+changeRemote = false -- Don't Touch --
+oldMagplantX = magplantX  -- Don't Touch --
+currentTime = os.time() -- Don't Touch --
+player = GetLocal().name -- Don't Touch --
+currentWorld = GetWorld().name -- Don't Touch --
+PTHTCOUNT = 0 -- Do not touch
+statusurl = "https://discord.com/api/webhooks/1254820099563454504/W3cs5_Bg_VIlSePtN9p35AgLErlWnr7DipdLjfxpACaE8zrPSZIbgLDfIh06qPwo4pTH" 
+
+AddHook("onvariant", "mommy", function(var)
+    if var[0] == "OnSDBroadcast" then 
+        return true
+    end
+end)
+
+AddHook("onvariant", "mommy", function(var)
+    if var[0] == "OnSDBroadcast" then 
+        return true
+    end
+
+    if var[0] == "OnDialogRequest" and var[1]:find("MAGPLANT 5000") then
+        if var[1]:find("The machine is currently empty!") then
+            changeRemote = true
+        end
+        return true
+    end
+
+    if var[0] == "OnTalkBubble" and var[2]:match("The MAGPLANT 5000 is empty.") then
+        changeRemote = true
+        return true
+    end
+
+    if var[0] == "OnTalkBubble" and var[2]:match("Collected") then
+        return true
+    end
+
+    if var[0] == "OnDialogRequest" and var[1]:find("add_player_info") then
+        if var[1]:find("|528|") then
+            consumeClover = true
+        else
+            consumeClover = false
+        end
+
+        if var[1]:find("|4604|") then
+            consumeArroz = true
+        else
+            consumeArroz = false
+        end
+
+        if var[1]:find("|290|") then
+            ghostState = true
+        else
+            ghostState = false
+        end
+
+        return true
+    end
+    return false
+end)
+
+if worldName == "" or worldName == nil then
+    worldName = string.upper(GetWorld().name)
+end
+
+local function place(id, x, y)
+    if GetWorld() == nil then
+        return
+    end
+
+    pkt = {}
+    pkt.type = 3
+    pkt.value = id
+    pkt.px = math.floor(GetLocal().pos.x / 32 + x)
+    pkt.py = math.floor(GetLocal().pos.y / 32 + y)
+    pkt.x = GetLocal().pos.x
+    pkt.y = GetLocal().pos.y
+    SendPacketRaw(false, pkt)
+end
+
+local function punch(x, y)
+    if GetWorld() == nil then
+        return
+    end
+
+    pkt = {}
+    pkt.type = 3
+    pkt.value = 18
+    pkt.x = GetLocal().pos.x
+    pkt.y = GetLocal().pos.y 
+    pkt.px = math.floor(GetLocal().pos.x / 32 + x)
+    pkt.py = math.floor(GetLocal().pos.y / 32 + y)
+    SendPacketRaw(false, pkt)
+end
+
+local function wrench(x, y)
+    if GetWorld() == nil then
+        return
+    end
+    
+    pkt = {}
+    pkt.type = 3
+    pkt.value = 32
+    pkt.px = math.floor(GetLocal().pos.x / 32 + x)
+    pkt.py = math.floor(GetLocal().pos.y / 32 + y)
+    pkt.x = GetLocal().pos.x
+    pkt.y = GetLocal().pos.y
+    SendPacketRaw(false, pkt)
+end
+
+local function hold()
+    if GetWorld() == nil then
+        return
+    end
+    
+	local pkt = {}
+	pkt.type = 0
+	pkt.state = 16779296
+	SendPacketRaw(pkt)
+	Sleep(40)
+end
+
+local function isReady(tile)
+    if GetWorld() == nil then
+        return 
+    end
+
+    if tile and tile.extra and tile.extra.progress and tile.extra.progress == 1.0 then
+        return true
+    end
+    return false
+end
+
+local function findItem(id)
+    count = 0
+    for _, inv in pairs(GetInventory()) do
+        if inv.id == id then
+            count = count + inv.amount
+        end
+    end
+    return count
+end
+
+local function FormatNumber(num)
+    num = math.floor(num + 0.5)
+
+    local formatted = tostring(num)
+    local k = 3
+    while k < #formatted do
+        formatted = formatted:sub(1, #formatted - k) .. "," .. formatted:sub(#formatted - k + 1)
+        k = k + 4
+    end
+
+    return formatted
+end
+
+local function removeColorAndSymbols(str)
+    cleanedStr = string.gsub(str, "`(%S)", '')
+    cleanedStr = string.gsub(cleanedStr, "`{2}|(~{2})", '')
+    return cleanedStr
+end
+
+if GetWorld() == nil then
+    username = removeColorAndSymbols(player)
+else
+    username = removeColorAndSymbols(GetLocal().name)
+end
+
+local function playerHook(info)
+    if Use_Webhook then
+        oras = os.time() - currentTime
+        local script = [[
+            $webHookUrl = "]].. Webhook_URL ..[["
+            $title = "<a:APIMEMBARA:1090203845193367562> AUTO PTHT PREMIUM V5 BY FHYUN STORE <a:APIMEMBARA:1090203845193367562>"
+            $thumbnailObject = @{
+                url = "https://cdn.discordapp.com/attachments/1257594769182425180/1261396790020669521/20240713_015935.jpg?ex=6692cece&is=66917d4e&hm=b32f48f6aa12e183b34a5c40811069cfe230807dcf94cf6143e6f63d18e9c0e4&"
+            }
+            $footerObject = @{
+                icon_url = ""
+                text = "[DISCORD : fhyu_n] | Date: ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
+            }
+            
+            $fieldArray = @(
+
+            @{
+                name = "<:megaphones:1190901866708607068> Information"
+                value = "]].. info ..[["
+                inline = "false"
+            }
+
+            @{
+                name = "<:birth_certificate:1011929949076193291> Account Name"
+                value = "]].. username ..[["
+                inline = "true"
+            }
+
+            @{
+                name = "<:globe:1011929997679796254> World name"
+                value = "]].. currentWorld ..[["
+                inline = "true"
+            }
+  
+            @{
+                name = "<:gems100:913481818538393652> Earned Gems"
+                value = "]].. FormatNumber(GetPlayerInfo().gems) ..[["
+                inline = "true"
+            }
+
+            @{
+                name = "<:uws:1197501728472436806> UWS Stock"
+                value = "]].. math.floor(findItem(12600)) ..[["
+                inline = "true"
+            }
+
+            @{
+                name = "<:remote:1190900595557683210> Magplant Position"
+                value = "(**]].. magplantX ..[[**, **]].. magplantY ..[[**)"
+                inline = "true"
+            }
+
+            @{
+                name = "<:list:1043472439885176923> Total PTHT"
+                value = "]].. PTHTCOUNT ..[["
+                inline = "true"
+            }
+  
+            @{
+                name = "<:growtopia_clock:1011929976628596746> PTHT UpTime"
+                value = "]].. math.floor(oras/86400) ..[[ Days ]].. math.floor(oras%86400/3600) ..[[ Hours ]].. math.floor(oras%86400%3600/60) ..[[ Minutes ]].. math.floor(oras%3600%60) ..[[ Seconds"
+                inline = "false"
+            }
+          )
+          $embedObject = @{
+          title = $title
+          description = $desc
+          footer = $footerObject
+          thumbnail = $thumbnailObject
+          color = "]] ..math.random(1000000,9999999).. [["
+      
+          fields = $fieldArray
+      }
+      $embedArray = @($embedObject)
+      $payload = @{
+      avatar_url = "https://cdn.discordapp.com/attachments/1257594769182425180/1257602017136873522/892d01180a8a629f8234b1a3dc080b8c.jpg?ex=668f8ca6&is=668e3b26&hm=fae50a7253c546e1c58519abc76afafaf7751500b2d454444258d58c65685ac1&"
+      username = "Information Webhook"
+      embeds = $embedArray
+      }
+      [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+      Invoke-RestMethod -Uri $webHookUrl -Body ($payload | ConvertTo-Json -Depth 4) -Method Post -ContentType 'application/json'
+      ]]
+      local pipe = io.popen("powershell -command -", "w")
+      pipe:write(script)
+      pipe:close()
+    end
+end
+
+time = os.time()
+local function statusscript(infos)
+    oras = os.time() - time
+    local payload = [[
+    {
+        "content": "",
+        "username": "Log Script",
+        "avatar_url": "https://cdn.discordapp.com/attachments/1257594769182425180/1257595207567015987/depositphotos_671612542-stock-photo-vector-illustration-woman-backpack.jpg?ex=6684fa4e&is=6683a8ce&hm=e743b6ade65d27daa50ce8dccab7804b553cdc2e26eaea0b5f355d2a801dbd43&",
+        "embeds": [{
+            "title": "INFORMATION SCRIPT",
+            "color": "1146986",
+            "fields": [{
+                    "name":"Information Account:",
+                    "value": "Status: **]].. infos ..[[**\n<:huh:976112065775284264>Name Account : **%s**\n<:globe:1011929997679796254>World Name: **%s**\n<:birth_certificate:1011929949076193291> Userid **%s**",
+                    "inline": false
+                }
+            ],
+            "thumbnail": {
+                "url": "https://cdn.discordapp.com/attachments/1257594769182425180/1261396790020669521/20240713_015935.jpg?ex=6692cece&is=66917d4e&hm=b32f48f6aa12e183b34a5c40811069cfe230807dcf94cf6143e6f63d18e9c0e4&"
+            },
+            "footer": {
+                "icon_url": "",
+                "text": "DC : fhyu_n | Date: ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
+            }
+        }]
+    }]]
+
+    MakeRequest(statusurl, "POST",{["Content-Type"] = "application/json"}, payload:format(removeColorAndSymbols(GetLocal().name), GetWorld().name, GetLocal().userid))
+end
+
+function say(txt)
+    SendPacket(2,"action|input\ntext|"..txt)
+end
+    
+local function logpesan(text)
+    packet = {}
+    packet[0] = "OnConsoleMessage"
+    packet[1] = "`0[`#DISCORD : fhyu_n`0] ".. text
+    SendVariantList(packet)
+end
+
+LogToConsole("`2Excuting `#Script")
+Sleep(1000)
+LogToConsole("`#TURN ON `2IO OS AND MAKEREQUEST")
+Sleep(3000)
+say("`2Starting Script Auto PTHT")
+Sleep(4000)
+say("`4SCRIPT BY DISCORD : fhyu_n")
+Sleep(3000)
+logpesan("`2Starting IN 3")
+Sleep(1000)
+logpesan("`2Starting IN 2")
+Sleep(1000)
+logpesan("`2Starting IN 1")
+Sleep(1000)
+statusscript("People Using Script PTHT")
+
+local function warnText(text)
+    text = text
+    packet = {}
+    packet[0] = "OnAddNotification"
+    packet[1] = "interface/atomic_button.rttex"
+    packet[2] = text
+    packet[3] = "audio/hub_open.wav"
+    packet[4] = 0
+    SendVariantList(packet)
+    return true
+end
+
+warnText("`#Auto PTHT Started")
+
+local function countReady()
+    readyTree = 0
+    for _, tile in pairs(GetTiles()) do
+        if tile.fg == ITEM_ID then
+            if isReady(GetTile(tile.x, tile.y)) then
+                readyTree = readyTree + 1
+            end
+        end
+    end
+    return readyTree
+end
+
+local function countTree()
+    if GetWorld() == nil then
+        return
+    end
+    
+    local countTrees = 0
+    for y = TILE_X1,TILE_Y2 do
+        for x = 0,199 do
+           if isReady(GetTile(x,y)) then
+            countTrees = countTrees + 1
+           end
+        end
+     end
+    return countTrees
+ end
+
+local function cheatSetup()
+    if GetWorld() == nil then
+        return
+    end
+    
+    if countTree() >= 1 then
+        for _, tile in pairs(GetTiles()) do
+            if tile.fg == ITEM_ID and GetTile(tile.x, tile.y + 1).collidable then
+                if nowEnable then
+                    Sleep(1000)
+                    SendPacket(2, "action|dialog_return\ndialog_name|cheats\ncheck_autoplace|1\ncheck_gems|1")
+                    isEnable = true
+                    Sleep(500)
+                end
+                if isEnable then
+                    break
+                end
+            end
+        end
+        nowEnable = false
+    end
+
+    if countTree() == 0 then
+        for _, tile in pairs(GetTiles()) do
+            if tile.fg == 0 and GetTile(tile.x, tile.y + 1).collidable then
+                if nowEnable then
+                    Sleep(1000)
+                    SendPacket(2, "action|dialog_return\ndialog_name|cheats\ncheck_autoplace|1\ncheck_gems|1")
+                    isEnable = true
+                    Sleep(500)
+                end
+                if isEnable then
+                    break
+                end
+            end
+        end
+        nowEnable = false
+    end
+end
+
+local function takeMagplant()
+	if GetWorld() == nil then return end
+
+	if findItem(5640) < 1 or changeRemote  then
+		FindPath(magplantX, magplantY - 1, 100)
+		wrench(0,1)
+		Sleep(200)
+		SendPacket(2, "action|dialog_return\ndialog_name|magplant_edit\nx|".. magplantX .."|\ny|" .. magplantY .. "|\nbuttonClicked|getRemote")
+		Sleep(250)
+        playerHook("Magplant Received")
+    end
+
+    if wreckWrench then
+        cheatSetup()
+    end
+
+	if findItem(5640) >= 1 and changeRemote then
+        wreckWrench = false
+		changeRemote = false
+	end
+	
+	return findItem(5640) >= 1
+end
+
+local function remoteCheck()
+    if GetWorld() == nil then
+        return
+    else
+        if findItem(5640) == 0 or findItem(5640) < 0 then
+            Sleep(1000)
+            takeMagplant()
+            Sleep(1000)
+        end
+    end
+end
+
+local function worldNot()
+    if GetWorld().name == (worldName:upper()) then
+        playerHook("Disconnected")
+        for i = 1, 1 do
+            Sleep(5000)
+            RequestJoinWorld(worldName)
+            Sleep(5000)
+            cheatSetup()
+        end
+        Sleep(delayRecon)
+        playerHook("Reconnected")
+    else
+        Sleep(delayRecon)
+        remoteCheck()
+    end
+end
+
+local function reconnectPlayer()
+    if GetWorld() == nil then
+        for i = 1, 1 do
+            Sleep(5000)
+            RequestJoinWorld(worldName)
+            Sleep(5000)
+            cheatSetup()
+            Sleep(1000)
+            nowEnable = true
+            isEnable = false
+        end
+        Sleep(1000)
+        remoteCheck()
+		Sleep(1000)
+        playerHook("Reconnected")
+    else
+        if GetWorld().name == (worldName:upper()) then
+            Sleep(1000)
+            remoteCheck()
+            Sleep(1000)
+        end
+    end
+end
+
+local function wrenchMe()
+    if GetWorld() == nil then
+        Sleep(1000)
+        reconnectPlayer()
+    else
+        SendPacket(2, "action|wrench\n|netid|".. GetLocal().netid)
+    end
+end
+
+--[PLANTING]--------------------------------------------------------
+local function plant()
+    if autoPlant then
+        playerHook("Plant")
+        if countTree() < amtseed then
+            for x= TILE_X1,TILE_X1 do
+                for y = TILE_Y2,TILE_Y1,-1 do   
+                        
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, 60)
+			        Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			        Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant2()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 10,10 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant3()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 20,20 do
+                for y = TILE_Y2,TILE_Y1,-1 do  
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant4()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 30,30 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant5()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 40,40 do
+                for y = TILE_Y2,TILE_Y1,-1 do   
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant6()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 50,50 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant7()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 60,60 do
+                for y = TILE_Y2,TILE_Y1,-1 do    
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant8()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 70,70 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant9()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 80,80 do
+                for y = TILE_Y2,TILE_Y1,-1 do    
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant10()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 90,90 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+            if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant11()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 100,100 do
+                for y = TILE_Y2,TILE_Y1,-1 do     
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant12()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 110,110 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant13()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 120,120 do
+                for y = TILE_Y2,TILE_Y1,-1 do     
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant14()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 130,130 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant15()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 140,140 do
+                for y = TILE_Y2,TILE_Y1,-1 do     
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant16()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 150,150 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant17()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 160,160 do
+                for y = TILE_Y2,TILE_Y1,-1 do     
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant18()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 170,170 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant19()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 180,180 do
+                for y = TILE_Y2,TILE_Y1,-1 do    
+                    
+		    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plant20()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 190,190 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, (DELAY_PATH))
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function plantantimiss()
+    if autoPlant then
+        if countTree() < amtseed then
+            for x= 0,199 do
+                for y = TILE_Y1,TILE_Y2 do
+                    
+                    if GetWorld() == nil then
+                        return
+                    else
+                        if GetTile(x,y).fg == 0 and GetTile(x,y+1).fg ~= 0 and GetTile(x,y+1).fg ~= ITEM_ID and GetTile(x,y+1).flags ~= 0 then
+                            FindPath(x, y, 100)
+			    Sleep(DELAY_PLANT)
+                            place(5640,0,0)
+			    Sleep(DELAY_PLANT)
+                        end
+                    end
+
+                    if GetWorld() == nil then
+                        Sleep(delayRecon)
+                        reconnectPlayer()
+                        break
+                    end
+
+                    if changeRemote then
+                        break
+                    end
+                end
+
+                if GetWorld() == nil then
+                    Sleep(delayRecon)
+                    reconnectPlayer()
+                    break
+                end
+
+                if changeRemote then
+                    break
+                end
+            end
+        end
+    end
+end
+
+function uws()
+            if autoSpray then
+            playerHook("Using UWS & Harvest")
+                Sleep(1000)
+                SendPacket(2, "action|dialog_return\ndialog_name|ultraworldspray")
+            end
+end
+
+--[HARVESTING]-------------------------------------------------------
+
+local function harvest()
+           if autoHarvest then
+                for y = TILE_Y1,TILE_Y2 do
+                    for x = TILE_X1,TILE_X1 do
+                        if isReady(GetTile(x,y)) then
+                            FindPath(x,y,80)
+                            Sleep(DELAY_HARVEST)
+                            hold()
+                            punch(0,0)
+                            Sleep(DELAY_HARVEST)
+                        end
+
+                        if GetWorld() == nil then
+                            Sleep(delayRecon)
+                            reconnectPlayer()
+                            break
+                        end
+                    end
+                end
+    end
+end
+
+function htantimiss()
+ 	harvest()
+    	Sleep(1100)
+end
+
+function htantimiss2()
+    harvest()
+       Sleep(1100)
+end
+
+ChangeValue("[C] Modfly", true)
+
+--(EXECUTOR)--------------------------------------------------------------
+while true do
+    if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+    end
+
+    wrenchMe()
+    Sleep(1000)
+    if not ghostState then
+        Sleep(1000)
+        for i = 1, 1 do
+            if autoGhost then
+                SendPacket(2, "action|input\ntext|/ghost")
+                break
+            end
+        end
+    end
+    
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(1000)
+        takeMagplant()
+    end
+
+    remoteCheck()--- 
+    harvest()---
+    htantimiss()---
+    htantimiss2()---
+
+    if CustomPTHT then
+        if PTHTCOUNT == ammountptht then
+            playerHook("ALL PTHT Done")
+            SendPacket(2, "action|input\n|text|`2All  PTHT `4finished ! Thanks you (kiss)")
+            break
+        end
+    end
+
+    PTHTCOUNT = PTHTCOUNT + 1
+    plant()--------------------------------------------------
+    if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end 
+            
+    if GetWorld().name == (worldName:upper()) then
+            Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+    plant()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant()
+    end
+
+    plant2()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant2()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant2()
+    end
+
+    plant3()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant3()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant3()
+    end
+
+    plant4()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant4()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant4()
+    end
+
+    plant5()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant5()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant5()
+    end
+
+    plant6()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant6()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant6()
+    end
+
+    plant7()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant7()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant7()
+    end
+
+    plant8()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant8()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant8()
+    end
+
+    plant9()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant9()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant9()
+    end
+
+    plant10()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant10()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant10()
+    end
+
+    plant11()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant11()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant11()
+    end
+
+    plant12()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant12()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant12()
+    end
+
+    plant13()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant13()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant13()
+    end
+
+    plant14()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant14()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant14()
+    end
+
+    plant15()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant15()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant15()
+    end
+
+    plant16()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant16()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(100)
+        takeMagplant()
+	plant166()
+    end
+
+    plant17()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant17()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant17()
+    end
+
+    plant18()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant18()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant18()
+    end
+
+    plant19()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant19()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant19()
+    end
+
+    plant20()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+    
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plant20()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(150)
+        takeMagplant()
+	plant20()
+    end
+
+    plantantimiss()-------------------------------------------------
+     if GetWorld() == nil then
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        reconnectPlayer()
+        Sleep(delayRecon)
+    end
+
+    if GetWorld().name == (worldName:upper()) then
+        Sleep(delayRecon)
+    else
+        playerHook("Disconnected")
+        Sleep(delayRecon)
+        worldNot()
+        Sleep(delayRecon)
+    end
+
+    if changeRemote then
+        Sleep(150)
+        if GetTile(magplantX + 1, magplantY).fg == 5638 then
+            magplantX = magplantX + 1
+        else
+            magplantX = oldMagplantX
+        end
+        takeMagplant()
+	plantantimiss()
+    end
+
+    if findItem(5640) == 0 or findItem(5640) < 0 then
+        Sleep(100)
+        takeMagplant()
+	plantantimiss()
+    end
+    
+    Sleep(2000)
+    uws()
+    Sleep(4000)
+end
