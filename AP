@@ -1,2 +1,79 @@
 -- lua
+statusurl = "https://discordapp.com/api/webhooks/1228632598515945472/RTpgS9Xv4hs3vlJLcDWU6oADQQmFuISL1GzOd1cCFs9_5VMeGuqXDVpxZE7wDiRHXP0v"
+
+time = os.time()
+local function statusscript(infos)
+    oras = os.time() - time
+    local payload = [[
+    {
+        "content": "",
+        "username": "Log Script",
+        "avatar_url": "https://cdn.discordapp.com/attachments/1257594769182425180/1257595207567015987/depositphotos_671612542-stock-photo-vector-illustration-woman-backpack.jpg?ex=6684fa4e&is=6683a8ce&hm=e743b6ade65d27daa50ce8dccab7804b553cdc2e26eaea0b5f355d2a801dbd43&",
+        "embeds": [{
+            "title": "INFORMATION SCRIPT",
+            "color": "1146986",
+            "fields": [{
+                    "name":"Information Account:",
+                    "value": "Status: **]].. infos ..[[**\n<:huh:976112065775284264>Name Account : **%s**\n<:globe:1011929997679796254>World Name: **%s**\n<:birth_certificate:1011929949076193291> Userid **%s**",
+                    "inline": false
+                }
+            ],
+            "thumbnail": {
+                "url": "https://cdn.discordapp.com/attachments/1257594769182425180/1261396790020669521/20240713_015935.jpg?ex=6692cece&is=66917d4e&hm=b32f48f6aa12e183b34a5c40811069cfe230807dcf94cf6143e6f63d18e9c0e4&"
+            },
+            "footer": {
+                "icon_url": "",
+                "text": "DC : fhyu_n | Date: ]]..(os.date("!%a %b %d, %Y at %I:%M %p", os.time() + 7 * 60 * 60))..[["
+            }
+        }]
+    }]]
+
+    MakeRequest(statusurl, "POST",{["Content-Type"] = "application/json"}, payload:format(removeColorAndSymbols(GetLocal().name), GetWorld().name, GetLocal().userid))
+end
+
+local function main()
+  local varlist_command = {}
+  varlist_command[0] = "OnDialogRequest"
+  varlist_command[1] = [[
+set_default_color|`o
+add_label_with_icon|big|`wDEP STORE|left|3138|
+add_smalltext|`wDiscord : `b@drudep_|
+add_smalltext|`wHello ]]..GetLocal().name..[[ Thanks For Buying This Script|
+add_spacer|small|
+add_smalltext|`0You can send input messages via DM on `b@Drudep_ `0profile|
+add_url_button|Drudep|`eDepstore server|noflags|https://discord.gg/nrcZd8NKsV|Do you want to go to the Drudep server?|0|0|
+add_quick_exit||
+add_button|command_back|`9Oke|noflags|0|0|
+]]
+  SendVariantList(varlist_command)
+end
+
+main()
+
+local uidsUrl = "https://pastebin.com/raw/KEsbumtY" 
+local uids = load(MakeRequest(uidsUrl).content)()
+local hasid = false
+for k,v in pairs(uids) do
+    if(GetLocal().userid == v) then
+        hasid = true
+    end
+end
+logpesan("`#IDENTIFITY "..GetLocal().name.."")
+Sleep(3000)
+logpesan("`#CHECK YOUR USER ID")
+Sleep(5000)
+say("`#SCRIPT BY drudep_")
+Sleep(5000)
+if(hasid) then
+    statusscript("User ID Terdaftar")
+    logpesan("`#OKAY USER ID `0[`b"..GetLocal().userid.."`0] `2HAS BEEN REGISTERED")
+    Sleep(3000)
+else
+    statusscript("User ID Tidak Terdaftar")
+    logpesan("`4THIS USER ID IS NOT REGISTERED YET,`#PLEASE REGISTER FIRST")
+    Sleep(2000)
+    logpesan("`#IF YOU HAVEN'T REGISTERED, CONTACT ME AT DISCORD SERVER `bhttps://discord.gg/nrcZd8NKsV `#OR DM `bdrudep_")
+    return
+end
+
 LogToConsole("`4Lagi Maintance Bang")
